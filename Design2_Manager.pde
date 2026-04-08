@@ -1,11 +1,7 @@
-// =============================================================
-// FILE 2: Design2_Manager.pde (ANALYTICS & ECONOMY LOGIC)
-// =============================================================
-
 int   d2_startFrame = 0;
 int   d2_duration = 180 * 60;
 
-// ── Decoupled Stock Arrays (The Lerp System) ─────────────────
+
 float[] d2_stock_target = { 0.82, 0.55, 0.93, 0.38, 0.71, 0.49 };
 float[] d2_stock_render = { 0.82, 0.55, 0.93, 0.38, 0.71, 0.49 };
 
@@ -18,21 +14,16 @@ int   d2_score      = 0;
 int   d2_stockouts  = 0;
 boolean[] d2_alert  = new boolean[6];
 
-// ── Sparkline History ─────────────────────────────────────────
 int SL_LEN = 80;
 float[][] d2_hist   = new float[6][SL_LEN];
 int d2_histIdx      = 0;
 int d2_histTimer    = 0;
 
-// ── Operations Budget (The Economy) ───────────────────────────
 float d2_budget    = 100.0;
 float BUDGET_COST  = 25.0;
 float BUDGET_REGEN = 0.12;
 
-// ── Visual FX ─────────────────────────────────────────────────
 float alarmAlpha   = 0;
-
-// =============================================================
 
 void initD2() {
   d2_budget = 100.0;
@@ -54,18 +45,14 @@ void drawD2() {
   background(236,240,250);
   int remaining = d2_duration - (frameCount - d2_startFrame);
   
-  // 1. Core Logic Update (Math & Economy)
   d2_budget = min(100.0, d2_budget + BUDGET_REGEN);
   boolean hasCritical = false;
 
   for(int s=0; s<6; s++) {
-    // Drain actual target
     d2_stock_target[s] = max(0, d2_stock_target[s] - d2_rate[s]);
     
-    // Lerp visual representation towards target (Fluid Data)
     d2_stock_render[s] += (d2_stock_target[s] - d2_stock_render[s]) * 0.15;
     
-    // Check thresholds based on TARGET
     if(d2_stock_target[s] < 0.28 && !d2_alert[s]) { d2_alert[s] = true; }
     if(d2_stock_target[s] <= 0.002) { 
       d2_score = max(0, d2_score - 50);
@@ -76,7 +63,6 @@ void drawD2() {
     if(d2_stock_target[s] <= 0.05) hasCritical = true;
   }
 
-  // 2. Sparkline Update
   d2_histTimer++;
   if(d2_histTimer >= 6) {
     d2_histTimer = 0; 
@@ -84,12 +70,10 @@ void drawD2() {
     for(int s=0; s<6; s++) d2_hist[s][d2_histIdx] = d2_stock_target[s];
   }
 
-  // 3. Render Dashboard Elements
   d2DrawHeader(remaining);
   d2DrawSKUPanel(10, 76, 344, H-86);
   d2DrawRightPanel(362, 76, W-372, H-86);
 
-  // 4. Critical Alarm State (Night Filter logic)
   if (hasCritical) {
     float pulse = 100 + 50 * sin(frameCount * 0.15);
     alarmAlpha += (pulse - alarmAlpha) * 0.1;
@@ -102,7 +86,6 @@ void drawD2() {
     rect(0, 0, W, H);
   }
 
-  // 5. Draw Floating Messages (From UI_Elements.pde)
   updateAndDrawMessages();
 
   if(remaining <= 0) d2End();
@@ -111,7 +94,6 @@ void drawD2() {
 void d2Reorder(int s) {
   if (s < 0 || s >= 6) return;
   
-  // Economy Check: Do they have the budget to order?
   if (d2_budget >= BUDGET_COST) {
     d2_budget -= BUDGET_COST;
     boolean wasLow = d2_stock_target[s] < 0.28;
@@ -121,18 +103,13 @@ void d2Reorder(int s) {
     d2_reorders++;
     d2_score += wasLow ? 50 : 10;
     
-    // Success feedback
     spawnMsg(mouseX > 0 ? mouseX : W/2, mouseY > 0 ? mouseY : H/2, "-$" + int(BUDGET_COST), color(255, 80, 80));
   } else {
-    // Failure feedback (Punishes button mashing)
     spawnMsg(W/2, H - 40, "INSUFFICIENT BUDGET", color(150, 150, 150));
-    d2_score = max(0, d2_score - 5); // Penalize spamming
+    d2_score = max(0, d2_score - 5);
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  DASHBOARD DRAWING FUNCTIONS
-// ─────────────────────────────────────────────────────────────
 void d2DrawHeader(int remaining) {
   noStroke(); fill(24,40,74); rect(0,0,W,68);
   fill(60,140,255); rect(0,0,4,68);
@@ -141,7 +118,6 @@ void d2DrawHeader(int remaining) {
   fill(255); textFont(SANS); textSize(17); text("STOCK-SYNC PRO  |  Inventory Command Center",106,28);
   fill(145,175,225); textSize(11); text("Live Dashboard  ·  Real-time SKU Performance  ·  Reorder Management",106,48);
 
-  // Budget Meter
   float bw = 120;
   fill(14, 25, 48); rect(W/2 - bw/2, 20, bw, 12, 6);
   fill(d2_budget >= BUDGET_COST ? color(55, 185, 95) : color(220, 80, 80));
@@ -149,7 +125,6 @@ void d2DrawHeader(int remaining) {
   fill(255); textAlign(CENTER); textFont(MONO); textSize(10);
   text("OP BUDGET: " + int(d2_budget) + "%", W/2, 48);
 
-  // Timer & Score
   int secs=remaining/60;
   fill(secs<20?color(255,100,80):color(90,220,140));
   textAlign(RIGHT); textSize(11); text("SESSION",W-16,22);
@@ -183,7 +158,6 @@ void d2DrawSKUPanel(float x,float y,float w,float h) {
     fill(95,115,165); textSize(10);
     text(d2_cat[s]+"  ·  key ["+(s+1)+"]",x+26,ry+rowH/2+18);
 
-    // USE LERPED VISUAL DATA HERE
     float pct = d2_stock_render[s]; 
     float barW=80, bh=8, bx=x+w-186, by=ry+rowH/2-bh/2;
     fill(215,222,238); rect(bx,by,barW,bh,2);
@@ -225,7 +199,7 @@ void d2DrawBarChart(float x,float y,float w,float h) {
 
   for(int s=0;s<6;s++){
     float bx=cx+s*(cw/6)+3, bw=cw/6-8;
-    // USE LERPED VISUAL DATA HERE
+
     float bh=d2_stock_render[s]*ch, by=cy+ch-bh;
     fill(222,228,245); rect(bx,cy,bw,ch,3);
     color bc=d2_stock_render[s]>0.5?color(55,185,98):d2_stock_render[s]>0.28?color(252,178,38):color(252,78,78);

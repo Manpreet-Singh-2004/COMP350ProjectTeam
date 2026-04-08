@@ -1,8 +1,3 @@
-// =============================================================
-// FILE 1: StockSyncPro.pde (MAIN ROUTER & DESIGN 1)
-// =============================================================
-
-// ── Screen IDs ───────────────────────────────────────────────
 final int SCR_TITLE  = 0;
 final int SCR_CHOOSE = 1;
 final int SCR_D1     = 2;
@@ -10,12 +5,10 @@ final int SCR_D2     = 3;
 final int SCR_RECAP  = 4;
 int scr = SCR_TITLE;
 
-// ── Fade transition ───────────────────────────────────────────
 float tAlpha     = 255;
 int   tTarget    = -1;
 boolean tFadeOut = false;
 
-// ── Recap data (shared) ───────────────────────────────────────
 int   lastMode       = 1;
 int   recapScore     = 0;
 int   recapCorrect   = 0;
@@ -27,13 +20,9 @@ float recapAcc       = 0;
 int[] recapCatOK     = new int[3];
 int[] recapCatTot    = new int[3];
 
-// ── Fonts ─────────────────────────────────────────────────────
 PFont MONO, SANS;
 int W, H;
 
-// =============================================================
-//  DESIGN 1 – TACTICAL SCANNER (Conveyor Game)
-// =============================================================
 int   g_score = 0, g_lives = 3, g_combo = 0, g_maxCombo = 0;
 int   g_total = 0, g_correct = 0;
 float g_speed = 2.2, g_spawn = 130;
@@ -59,9 +48,6 @@ float G_CVY, G_CVH = 108;
 float G_SZX, G_SZW = 92;
 float G_ITW = 80, G_ITH = 68;
 
-// =============================================================
-//  MAIN PROCESSING LOOP
-// =============================================================
 void setup() {
   size(900, 560);
   W = width; H = height;
@@ -79,11 +65,10 @@ void draw() {
     case SCR_TITLE:  drawTitle();  break;
     case SCR_CHOOSE: drawChoose(); break;
     case SCR_D1:     drawD1();     break;
-    case SCR_D2:     drawD2();     break;  // Function lives in Design2_Manager.pde
+    case SCR_D2:     drawD2();     break; 
     case SCR_RECAP:  drawRecap();  break;
   }
   
-  // Fade overlay
   noStroke();
   if (tFadeOut) {
     tAlpha = min(255, tAlpha + 16);
@@ -105,12 +90,9 @@ void goTo(int t) { if (!tFadeOut) { tTarget = t; tFadeOut = true; } }
 
 void onEnter(int s) {
   if (s == SCR_D1) initD1();
-  if (s == SCR_D2) initD2(); // Function lives in Design2_Manager.pde
+  if (s == SCR_D2) initD2();
 }
 
-// ─────────────────────────────────────────────────────────────
-//  TITLE SCREEN
-// ─────────────────────────────────────────────────────────────
 void drawTitle() {
   background(14, 18, 28);
   stroke(26, 34, 54); strokeWeight(1);
@@ -151,9 +133,6 @@ void drawLogoMark(float cx, float cy, float sz) {
   rect(cx - sz*0.62, cy - sz*0.50, sz*1.24, sz*0.28, 7, 7, 0, 0);
 }
 
-// ─────────────────────────────────────────────────────────────
-//  CHOOSE SCREEN
-// ─────────────────────────────────────────────────────────────
 void drawChoose() {
   background(18, 22, 36);
   fill(160, 180, 220); textFont(SANS); textAlign(CENTER); textSize(12);
@@ -252,9 +231,6 @@ void drawD2Card(float x, float y, float w, float h) {
   text("PRESS  2", x+w/2, y+h-28);
 }
 
-// ─────────────────────────────────────────────────────────────
-//  DESIGN 1 — TACTICAL SCANNER GAME
-// ─────────────────────────────────────────────────────────────
 void initD1() {
   g_score=0; g_lives=3; g_combo=0; g_maxCombo=0;
   g_total=0; g_correct=0;
@@ -449,9 +425,6 @@ class ScanItem {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  RECAP / SESSION SUMMARY
-// ─────────────────────────────────────────────────────────────
 void drawRecap() {
   background(14,18,28);
   color accent=(lastMode==1)?color(0,150,80):color(55,130,255);
@@ -464,7 +437,7 @@ void drawRecap() {
   String ml=(lastMode==1)?"DESIGN 1 — TACTICAL SCANNER":"DESIGN 2 — COMMAND CENTER";
   text(ml,W/2,100);
 
-  if(lastMode==1) recapD1(); else recapD2(); // Function lives in Design2_Manager.pde
+  if(lastMode==1) recapD1(); else recapD2(); 
 
   color other=(lastMode==1)?color(55,130,255):color(0,150,80);
   noStroke(); fill(other); rect(W/2-215,H-76,200,40,6);
@@ -508,11 +481,8 @@ void recapD1() {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  INPUT
-// ─────────────────────────────────────────────────────────────
 void keyPressed() {
-  if(keyCode==ESC) key=0; // block ESC
+  if(keyCode==ESC) key=0; 
 
   if(scr==SCR_TITLE)  { if(keyCode==ENTER) goTo(SCR_CHOOSE); }
 
@@ -536,7 +506,7 @@ void keyPressed() {
 
   else if(scr==SCR_D2) {
     if(keyCode==ESC) { d2End(); return; }
-    if(key>='1'&&key<='6') d2Reorder(key-'1'); // Function lives in Design2_Manager.pde
+    if(key>='1'&&key<='6') d2Reorder(key-'1');
   }
 
   else if(scr==SCR_RECAP) {
